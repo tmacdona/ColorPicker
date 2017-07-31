@@ -25,10 +25,4 @@
         android:layout_height="48dp"
         />
 
-    <com.flask.colorpicker.slider.AlphaSlider
-        android:id="@+id/v_alpha_slider"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        />
-
 </LinearLayout>

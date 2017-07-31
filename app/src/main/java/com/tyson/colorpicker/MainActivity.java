@@ -1,5 +1,6 @@
 package com.tyson.colorpicker;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -27,8 +28,11 @@ public class MainActivity extends AppCompatActivity {
     private DatagramSocket mSocket = null;
     private InetAddress mLocalAddress = null;
     private int mServerPort = 2112;
-    private String mServerAddress = "192.168.0.113";/*"ala-gws-lx3";*/ /*"192.168.2.237";*/ /*"esp-nodemcu3";*/
+    private String mServerAddress = "10.10.10.236";/*"ala-gws-lx3";*/ /*"192.168.2.237";*/ /*"esp-nodemcu3";*/
 
+    private final int PIXEL_COUNT = 3;
+    private int[] mColorBuffer = {0,0,0};
+    private int mColorBufferPointer = 0;
 
 
 
@@ -48,6 +52,11 @@ public class MainActivity extends AppCompatActivity {
                 mColor = i;
 
                 colorPickerView.setBackgroundColor(i);
+
+                mColorBuffer[mColorBufferPointer] = i;
+                mColorBufferPointer = (mColorBufferPointer+1)%PIXEL_COUNT;
+
+
                 sendNewColor();
             }
         });
@@ -81,8 +90,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        String messageStr="Hello Android!";
-        byte[] message = hexStringToByteArray("00000011bcc5a4bc000000100000000900ff00ff00000000ff"); //messageStr.getBytes();
+        FrameBuffer frameBuffer = new FrameBuffer(PIXEL_COUNT);
+        frameBuffer.setColors(mColorBuffer);
+
+        //String messageStr="Hello Android!";
+        byte[] message = frameBuffer.getBufferByteArray(); //hexStringToByteArray("00000011bcc5a4bc000000100000000900ff00ff00000000ff"); //messageStr.getBytes();
         int msg_length=message.length;
 
 
