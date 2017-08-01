@@ -1,6 +1,5 @@
 package com.tyson.colorpicker;
 
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,6 +18,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -28,10 +28,10 @@ public class MainActivity extends AppCompatActivity {
     private DatagramSocket mSocket = null;
     private InetAddress mLocalAddress = null;
     private int mServerPort = 2112;
-    private String mServerAddress = "10.10.10.236";/*"ala-gws-lx3";*/ /*"192.168.2.237";*/ /*"esp-nodemcu3";*/
+    private String mServerAddress = /*"ala-gws-lx3";*/ /*"192.168.2.237";*/ "esp-nodemcu3";
 
-    private final int PIXEL_COUNT = 3;
-    private int[] mColorBuffer = {0,0,0};
+    private final int PIXEL_COUNT = 5;
+    private int[] mColorBuffer = new int[PIXEL_COUNT];
     private int mColorBufferPointer = 0;
 
 
@@ -41,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        for(int j = 0; j < PIXEL_COUNT; j++) {
+            mColorBuffer[j] = 0;
+        }
 
         final ColorPickerView colorPickerView = (ColorPickerView) findViewById(R.id.color_picker_view);
         colorPickerView.addOnColorChangedListener(new OnColorChangedListener() {
@@ -94,12 +97,15 @@ public class MainActivity extends AppCompatActivity {
         frameBuffer.setColors(mColorBuffer);
 
         //String messageStr="Hello Android!";
-        byte[] message = frameBuffer.getBufferByteArray(); //hexStringToByteArray("00000011bcc5a4bc000000100000000900ff00ff00000000ff"); //messageStr.getBytes();
-        int msg_length=message.length;
+        byte[] frame = frameBuffer.getBufferByteArray(); //hexStringToByteArray("00000011bcc5a4bc000000100000000900ff00ff00000000ff"); //messageStr.getBytes();
 
+
+        byte[] frameMessage = prependFrameHeader(frame);
+
+        byte[] packetMessage = setPacketMessage(frameMessage);
 
         if (mSocket != null && mLocalAddress != null) {
-            final DatagramPacket p = new DatagramPacket(message, msg_length, mLocalAddress, mServerPort);
+            final DatagramPacket p = new DatagramPacket(packetMessage, packetMessage.length, mLocalAddress, mServerPort);
 
 
             new Thread(new Runnable() {
@@ -120,6 +126,35 @@ public class MainActivity extends AppCompatActivity {
                 }
             }).start();
         }
+    }
+
+    private byte[] setPacketMessage(byte[] input) {
+
+        int numHeaderBytes = 8;
+        byte[] output = new byte[numHeaderBytes + input.length];
+
+        byte[] inputLength = ByteBuffer.allocate(4).putInt(input.length).array();
+        System.arraycopy(inputLength, 0, output, 0, 4);
+
+        System.arraycopy(input, 0, output, numHeaderBytes, input.length);
+
+        return output;
+    }
+
+    private byte[] prependFrameHeader(byte[] input) {
+
+        int numHeaderBytes = 8;
+        byte[] output = new byte[numHeaderBytes + input.length];
+
+        output[3] = 0x10;
+
+        byte[] inputLength = ByteBuffer.allocate(4).putInt(input.length).array();
+        System.arraycopy(inputLength, 0, output, 4, 4);
+
+
+        System.arraycopy(input, 0, output, numHeaderBytes, input.length);
+
+        return output;
     }
 
     public static InetAddress getInetAddressByName(String name)

@@ -14,9 +14,11 @@ import android.graphics.Color;
 
     private byte[][] buffer = null;
     private int[] colorBuffer;
+/*
     private byte[] packetHeader = {(byte)0,(byte)0,(byte)0,(byte)16,(byte)-68,(byte)-59,(byte)-92,
             (byte)-68,(byte)0,(byte)0,(byte)0,(byte)16,(byte)0,(byte)0,(byte)0,(byte)9};
-    private final int BYTES_PER_PIX = 3;
+*/
+    final int BYTES_PER_PIX = 3;
 
     FrameBuffer(int pixelCount){
 
@@ -52,11 +54,8 @@ import android.graphics.Color;
 
     private byte[] concatenateBuffer(){
 
-        byte[] output = new byte[(buffer.length * BYTES_PER_PIX) + packetHeader.length];
-
-        System.arraycopy(packetHeader, 0, output, 0, packetHeader.length);
-        int pos = packetHeader.length;
-
+        int pos = 0;
+        byte[] output = new byte[(buffer.length * BYTES_PER_PIX)];
 
         for(byte[] pixel : buffer) {
             System.arraycopy(pixel, 0, output, pos, BYTES_PER_PIX);
